@@ -1,13 +1,9 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Anthropic from '@anthropic-ai/sdk';
 import { config, getSystemPrompt } from '@/lib/config';
-import fs from 'fs';
-import path from 'path';
-
-const debugLogPath = path.join(process.cwd(), 'debug.log');
 function logToFile(msg: string) {
   const timestamp = new Date().toISOString();
-  fs.appendFileSync(debugLogPath, `[${timestamp}] ${msg}\n`);
+  console.log(`[${timestamp}] ${msg}`);
 }
 
 function initCloudinary() {
