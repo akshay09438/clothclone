@@ -56,7 +56,6 @@ export default function FashionStudio() {
     setError(null);
 
     try {
-      // Step 1: File to Base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = () => {
@@ -69,7 +68,6 @@ export default function FashionStudio() {
       const imageBase64 = await base64Promise;
       const mimeType = selectedFile.type;
 
-      // Update loading text halfway
       setTimeout(() => setLoadingText("Composing the shot..."), 3000);
 
       const response = await fetch("/api/generate", {
@@ -109,7 +107,7 @@ export default function FashionStudio() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "drape-model-shot.jpg";
+      a.download = "fashion-studio-result.jpg";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -119,14 +117,15 @@ export default function FashionStudio() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 max-w-[1000px] mx-auto">
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-12 max-w-[1200px] mx-auto overflow-x-hidden font-sans">
       {/* Header */}
-      <header className="mb-12 text-center">
-        <h1 className="text-5xl md:text-6xl tracking-[0.2em] font-light text-[#F5F0E8] mb-2 uppercase">
-          DRAPE
+      <header className="mb-12 text-center px-4">
+        <h1 className="text-3xl md:text-4xl font-black text-[#111827] mb-2 tracking-tight font-montserrat flex items-center justify-center gap-2">
+           <span className="bg-[#1273EB] text-white px-2 py-1 rounded-lg text-2xl">AI</span>
+           Fashion Studio
         </h1>
-        <p className="text-[#8A8580] font-sans tracking-wide uppercase text-sm">
-          AI Fashion Studio
+        <p className="text-[#4B5563] font-medium tracking-normal text-sm md:text-base opacity-70">
+          Professional Model Shot Generator
         </p>
       </header>
 
@@ -138,19 +137,21 @@ export default function FashionStudio() {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => state !== "LOADING" && fileInputRef.current?.click()}
-              className={`
-                relative w-full aspect-[4/5] md:max-w-md bg-[#1A1A1A] rounded-2xl border-2 border-dashed 
-                transition-all duration-500 flex flex-col items-center justify-center cursor-pointer overflow-hidden
-                ${state === "LOADING" ? "border-[#C9A84C]/30 pointer-events-none" : "border-[#2A2A2A] hover:border-[#C9A84C]/50"}
+               className={`
+                relative w-full aspect-[3/4] max-w-[280px] md:max-w-sm bg-white rounded-3xl border border-[#E5E7EB] shadow-sm
+                transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
+                ${state === "LOADING" ? "pointer-events-none ring-2 ring-[#1273EB]/20" : "hover:border-[#1273EB] hover:shadow-md"}
               `}
             >
               {state === "EMPTY" && (
-                <div className="text-center p-8">
-                  <div className="w-16 h-16 mb-4 mx-auto opacity-20 border-2 border-[#F5F0E8] rounded-full flex items-center justify-center">
-                    <span className="text-2xl mt-1">+</span>
+                <div className="text-center p-8 flex flex-col items-center">
+                  <div className="w-12 h-12 mb-4 bg-[#F3F4F6] rounded-2xl flex items-center justify-center text-[#1273EB]">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                    </svg>
                   </div>
-                  <p className="text-[#F5F0E8] font-sans text-lg mb-1">Drop your outfit photo here</p>
-                  <p className="text-[#8A8580] font-sans text-sm">JPG, PNG, WEBP up to 10MB</p>
+                  <p className="text-[#111827] font-semibold text-lg mb-1 font-montserrat">Drop outfit photo</p>
+                  <p className="text-[#6B7280] text-xs font-medium">JPEG, PNG up to 10MB</p>
                 </div>
               )}
 
@@ -165,21 +166,47 @@ export default function FashionStudio() {
 
               {(state === "SELECTED" || state === "LOADING") && previewUrl && (
                 <>
-                  <Image
-                    src={previewUrl}
-                    alt="Preview"
-                    fill
-                    className={`object-cover transition-opacity duration-700 ${state === "LOADING" ? "opacity-40 animate-pulse-custom" : "opacity-100"}`}
-                  />
-                  {state === "LOADING" && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                      <div className="w-48 h-[2px] bg-[#2A2A2A] mb-4 overflow-hidden relative">
-                         <div className="absolute inset-0 bg-[#C9A84C] animate-[progress_2s_ease-in-out_infinite]" />
+                  {state === "LOADING" ? (
+                    <div className="absolute inset-0 bg-[#F3F4F6] overflow-hidden">
+                      {/* Atmospheric Layer */}
+                      <div className="absolute inset-0 opacity-40 pointer-events-none">
+                        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#1273EB]/10 rounded-full blur-[60px] animate-pulse" />
                       </div>
-                      <p className="text-[#C9A84C] font-sans tracking-widest uppercase text-xs animate-pulse">
-                        {loadingText}
-                      </p>
+
+                      {/* The Glide - Animated Model */}
+                      <div className="absolute inset-x-[-20%] inset-y-0 opacity-80 animate-glide">
+                         <div className="relative w-full h-full">
+                            <Image
+                              src="/assets/loading-model.jpg"
+                              alt="Processing..."
+                              fill
+                              className="object-cover object-top"
+                            />
+                            {/* Texture Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#F3F4F6] via-transparent to-[#F3F4F6]" />
+                         </div>
+                      </div>
+
+                      {/* The Piki Blue Laser Scan */}
+                      <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#1273EB] to-transparent shadow-[0_0_15px_#1273EB] z-20 animate-scan" />
+
+                      {/* Loading Text Overlay */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 z-30">
+                        <p className="text-[#111827] font-bold text-lg mb-4 animate-fade-in-out font-montserrat">
+                          {loadingText}
+                        </p>
+                        <div className="w-24 h-[3px] bg-[#E5E7EB] rounded-full overflow-hidden">
+                           <div className="h-full bg-[#1273EB] animate-progress-fast" />
+                        </div>
+                      </div>
                     </div>
+                  ) : (
+                    <Image
+                      src={previewUrl}
+                      alt="Preview"
+                      fill
+                      className="object-cover object-top transition-opacity duration-700 opacity-100"
+                    />
                   )}
                 </>
               )}
@@ -188,61 +215,52 @@ export default function FashionStudio() {
 
             {/* Error Message */}
             {error && (
-              <p className="text-red-400 font-sans text-sm mt-[-1rem]">{error}</p>
+              <p className="text-red-500 font-medium text-sm mt-[-1rem]">{error}</p>
             )}
 
             {/* CTA Button */}
             {state === "SELECTED" && (
               <button
                 onClick={generateModelShot}
-                disabled={state === "LOADING"}
-                className="w-full md:max-w-md bg-[#C9A84C] text-black font-sans font-bold py-4 rounded-xl tracking-widest uppercase hover:bg-[#D4B86D] transition-colors"
+                className="w-full max-w-[280px] md:max-w-sm bg-[#1273EB] text-white font-bold py-4 rounded-2xl tracking-tight hover:bg-[#0D59B7] transition-all shadow-lg shadow-[#1273EB]/20 font-montserrat text-lg"
               >
-                Generate Model Shot
+                Generate Shot
               </button>
             )}
           </div>
         ) : (
           /* RESULT STATE */
-          <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-auto">
-              {/* Original Panel */}
-              <div className="relative aspect-[4/5] bg-[#1A1A1A] rounded-2xl overflow-hidden border border-[#2A2A2A]">
-                {previewUrl && <Image src={previewUrl} alt="Original Cloth" fill className="object-cover" />}
-                <div className="absolute top-4 left-4 bg-black/50 backdrop-blur px-3 py-1 rounded text-[10px] uppercase tracking-widest text-[#8A8580]">
-                  Original
-                </div>
-              </div>
-
+          <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in-95 duration-700">
+            <div className="w-full flex justify-center h-auto px-4">
               {/* Generated Panel */}
-              <div className="relative aspect-[4/5] bg-[#1A1A1A] rounded-2xl overflow-hidden border border-[#C9A84C]/30 shadow-[0_0_30px_rgba(201,168,76,0.1)]">
+              <div className="relative w-full aspect-[3/4] max-w-[280px] md:max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/[0.05] transition-all duration-700">
                 {outputImageUrl && (
                   <Image 
                     src={outputImageUrl} 
                     alt="Generated Model" 
                     fill 
-                    className="object-cover"
+                    className="object-cover object-top"
                   />
                 )}
-                <div className="absolute top-4 left-4 bg-[#C9A84C]/20 backdrop-blur px-3 py-1 rounded text-[10px] uppercase tracking-widest text-[#C9A84C] border border-[#C9A84C]/30">
-                  Model Shot
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[10px] uppercase font-black text-[#1273EB] border border-[#1273EB]/10 tracking-widest">
+                  Result
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
+            <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
               <button
                 onClick={downloadImage}
-                className="w-full bg-[#F5F0E8] text-black font-sans font-bold py-3 rounded-lg tracking-widest uppercase hover:bg-white transition-colors text-sm"
+                className="w-full bg-[#111827] text-white font-bold py-4 rounded-2xl tracking-tight hover:bg-black transition-all font-montserrat shadow-lg"
               >
-                Download
+                Download Image
               </button>
               <button
                 onClick={reset}
-                className="w-full border border-[#2A2A2A] text-[#8A8580] font-sans py-3 rounded-lg tracking-widest uppercase hover:border-[#8A8580] hover:text-[#F5F0E8] transition-all text-sm"
+                className="w-full bg-white border border-[#E5E7EB] text-[#4B5563] font-bold py-4 rounded-2xl tracking-tight hover:bg-[#F9FAFB] hover:text-[#111827] transition-all font-montserrat shadow-sm"
               >
-                Generate Another
+                Start Over
               </button>
             </div>
           </div>
@@ -250,9 +268,35 @@ export default function FashionStudio() {
       </div>
 
       <style jsx global>{`
-        @keyframes progress {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+        @keyframes progress-fast {
+          0% { width: 0%; transform: translateX(-100%); }
+          100% { width: 100%; transform: translateX(100%); }
+        }
+        @keyframes glide {
+          0% { transform: translateX(-8%); }
+          100% { transform: translateX(8%); }
+        }
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes fade-in-out {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+        .animate-glide {
+          animation: glide 8s ease-in-out infinite alternate;
+        }
+        .animate-scan {
+          animation: scan 2.5s linear infinite;
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 2s ease-in-out infinite;
+        }
+        .animate-progress-fast {
+          animation: progress-fast 2s linear infinite;
         }
       `}</style>
     </main>

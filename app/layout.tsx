@@ -1,22 +1,21 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-cormorant",
+  variable: "--font-inter",
 });
 
-const dmSans = DM_Sans({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-dm-sans",
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
-  title: "DRAPE | AI Fashion Studio",
-  description: "Boutique-facing AI fashion photography automation tool.",
+  title: "AI Fashion Studio | Freepik Style",
+  description: "Next-gen AI fashion photography tool.",
 };
 
 export default function RootLayout({
@@ -26,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${cormorant.variable} ${dmSans.variable} font-sans antialiased bg-[#0F0F0F] text-[#F5F0E8]`}>
+      <body className={`${inter.variable} ${montserrat.variable} font-sans antialiased bg-[#F9FAFB] text-[#111827]`}>
         {children}
       </body>
     </html>

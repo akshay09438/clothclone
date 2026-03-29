@@ -66,10 +66,6 @@ async function uploadToCloudinary(imageBase64: string, mimeType: string): Promis
   }
 }
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 /**
  * Generates an image prompt using Claude.
  * @param imageBase64 The base64 string
@@ -78,10 +74,16 @@ const anthropic = new Anthropic({
  * @returns The generated prompt string
  */
 async function generatePromptWithClaude(imageBase64: string, mimeType: string, systemPrompt: string): Promise<string> {
-  logToFile(`[CLAUDE_START] Model: claude-haiku-4-5, SystemPrompt len: ${systemPrompt.length}`);
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  const keyPrefix = process.env.ANTHROPIC_API_KEY?.substring(0, 10) || 'MISSING';
+  logToFile(`[CLAUDE_START] Model: claude-sonnet-4-6, KeyPrefix: ${keyPrefix}, SystemPrompt len: ${systemPrompt.length}`);
+  
   try {
     const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       system: systemPrompt,
       messages: [
@@ -111,10 +113,10 @@ async function generatePromptWithClaude(imageBase64: string, mimeType: string, s
       return content.text;
     }
     throw new Error('Unexpected content type from Claude');
-  } catch (error) {
-    logToFile(`[CLAUDE_ERR] Error: ${error}`);
+  } catch (error: any) {
+    logToFile(`[CLAUDE_ERR] Status: ${error?.status}, Error: ${error}`);
     console.error('Claude API error:', error);
-    throw new Error('Could not analyze outfit');
+    throw new Error(`Could not analyze outfit: ${error?.message || 'Unknown error'}`);
   }
 }
 
