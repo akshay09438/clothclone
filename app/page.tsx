@@ -17,16 +17,25 @@ export default function FashionStudio() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError("Image must be under 10MB");
-        return;
-      }
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setState("SELECTED");
-      setError(null);
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      setError("Image must be under 20MB");
+      return;
     }
+
+    setSelectedFile(file);
+    setError(null);
+
+    // Use FileReader → data URL for universal mobile compatibility
+    // (blob: URLs from URL.createObjectURL can fail on iOS Safari)
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setPreviewUrl(dataUrl);
+      setState("SELECTED");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -37,14 +46,19 @@ export default function FashionStudio() {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError("Image must be under 10MB");
+      if (file.size > 20 * 1024 * 1024) {
+        setError("Image must be under 20MB");
         return;
       }
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setState("SELECTED");
       setError(null);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setPreviewUrl(dataUrl);
+        setState("SELECTED");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -56,17 +70,11 @@ export default function FashionStudio() {
     setError(null);
 
     try {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(",")[1]);
-        };
-        reader.readAsDataURL(selectedFile);
-      });
-
-      const imageBase64 = await base64Promise;
-      const mimeType = selectedFile.type;
+      // previewUrl is already a data URL — extract base64 directly
+      const dataUrl = previewUrl!;
+      const base64Index = dataUrl.indexOf(",") + 1;
+      const imageBase64 = dataUrl.substring(base64Index);
+      const mimeType = selectedFile.type || "image/jpeg";
 
       setTimeout(() => setLoadingText("Composing the shot..."), 3000);
 
@@ -132,37 +140,39 @@ export default function FashionStudio() {
       <div className="w-full">
         {state === "EMPTY" || state === "SELECTED" || state === "LOADING" ? (
           <div className="flex flex-col items-center gap-8">
-            {/* Upload Zone */}
-            <div
+            {/* Upload Zone — label wraps input for reliable mobile tap handling */}
+            <label
+              htmlFor="file-input"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-               className={`
+              className={`
                 relative w-full aspect-[3/4] max-w-[280px] md:max-w-sm bg-white rounded-3xl border border-[#E5E7EB] shadow-sm
-                transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
-                ${state === "LOADING" ? "pointer-events-none ring-2 ring-[#1273EB]/20" : "hover:border-[#1273EB] hover:shadow-md"}
+                transition-all duration-300 flex flex-col items-center justify-center overflow-hidden
+                ${state === "LOADING" ? "pointer-events-none ring-2 ring-[#1273EB]/20" : "cursor-pointer hover:border-[#1273EB] hover:shadow-md"}
               `}
             >
+              {/* Hidden file input — label click/tap redirects here natively on all browsers */}
+              <input
+                id="file-input"
+                type="file"
+                ref={fileInputRef}
+                className="sr-only"
+                accept="image/*"
+                disabled={state === "LOADING"}
+                onChange={handleFileChange}
+              />
+
               {state === "EMPTY" && (
-                <div className="text-center p-8 flex flex-col items-center">
+                <div className="text-center p-8 flex flex-col items-center pointer-events-none">
                   <div className="w-12 h-12 mb-4 bg-[#F3F4F6] rounded-2xl flex items-center justify-center text-[#1273EB]">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
-                  <p className="text-[#111827] font-semibold text-lg mb-1 font-montserrat">Drop outfit photo</p>
-                  <p className="text-[#6B7280] text-xs font-medium">JPEG, PNG up to 10MB</p>
+                  <p className="text-[#111827] font-semibold text-lg mb-1 font-montserrat">Tap to upload</p>
+                  <p className="text-[#6B7280] text-xs font-medium">JPEG, PNG · camera or gallery</p>
                 </div>
               )}
-
-              <input
-                id="file-input"
-                type="file"
-                ref={fileInputRef}
-                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${state === "LOADING" ? "pointer-events-none" : ""}`}
-                accept="image/*"
-                disabled={state === "LOADING"}
-                onChange={handleFileChange}
-              />
 
               {(state === "SELECTED" || state === "LOADING") && previewUrl && (
                 <>
@@ -201,18 +211,16 @@ export default function FashionStudio() {
                       </div>
                     </div>
                   ) : (
-                    // Use plain <img> for blob: URLs — next/image doesn't support them on mobile
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      className="absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 opacity-100"
+                      className="absolute inset-0 w-full h-full object-cover object-top"
                     />
                   )}
                 </>
               )}
-              
-            </div>
+            </label>
 
             {/* Error Message */}
             {error && (
