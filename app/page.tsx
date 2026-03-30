@@ -136,7 +136,6 @@ export default function FashionStudio() {
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={() => state !== "LOADING" && fileInputRef.current?.click()}
                className={`
                 relative w-full aspect-[3/4] max-w-[280px] md:max-w-sm bg-white rounded-3xl border border-[#E5E7EB] shadow-sm
                 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden
@@ -159,8 +158,9 @@ export default function FashionStudio() {
                 id="file-input"
                 type="file"
                 ref={fileInputRef}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${state === "LOADING" ? "pointer-events-none" : ""}`}
                 accept="image/*"
+                disabled={state === "LOADING"}
                 onChange={handleFileChange}
               />
 
@@ -201,11 +201,12 @@ export default function FashionStudio() {
                       </div>
                     </div>
                   ) : (
-                    <Image
+                    // Use plain <img> for blob: URLs — next/image doesn't support them on mobile
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={previewUrl}
                       alt="Preview"
-                      fill
-                      className="object-cover object-top transition-opacity duration-700 opacity-100"
+                      className="absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 opacity-100"
                     />
                   )}
                 </>
